@@ -1,0 +1,52 @@
+﻿@page "/customers/edit/{CustomerId:int}"
+@inject HttpClient http
+@inject NavigationManager manager
+@using System.Text.Json
+<h3>Customer Info Edit</h3>
+@if(customer==null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div>
+        <CustomersForm customer="customer" OnValidSubmit="OnValidSubmit"></CustomersForm>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int CustomerId { get; set; }
+    private Customer customer;
+    private async Task OnValidSubmit()
+    {
+        var response = await http.PutAsJsonAsync("api/Customer", customer);
+        var body = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        {
+            manager.NavigateTo("customers");
+        }
+        else
+        {
+            // Console.WriteLine(await response.Content.ReadAsStringAsync());
+            Console.WriteLine($"{body}");
+        }
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await http.GetAsync($"api/Customer/{CustomerId}");
+        if (response.IsSuccessStatusCode)
+        {
+            customer = JsonSerializer.Deserialize<Customer>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions()
+                {
+                    PropertyNameCaseInsensitive = true,
+                });
+        }
+        else
+        {
+            manager.NavigateTo("customers");
+        }
+    }
+   }

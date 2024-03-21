@@ -1,0 +1,38 @@
+﻿@page "/customers/create"
+@inject HttpClient http
+@inject NavigationManager manager
+<h3>Create New Customer</h3>
+@if (customer == null)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="sr-only text-uppercase">Loading!!!!!</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <CustomersForm customer="customer" OnValidSubmit="OnValidSubmit"></CustomersForm>
+    </div>
+}
+
+
+@code {
+    Customer customer = new Customer();
+
+    private async Task OnValidSubmit()
+    {
+        var response = await http.PostAsJsonAsync("api/Customer", customer);
+        var body = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"The new student id is {body}");
+            manager.NavigateTo("customers"); //customer
+        }
+        else
+        {
+            Console.WriteLine($"{body}");
+        }
+    }
+}

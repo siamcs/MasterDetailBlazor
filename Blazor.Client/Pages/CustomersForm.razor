@@ -1,0 +1,127 @@
+﻿<EditForm Model="@customer" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <InputText class="form-control" @bind-Value="@customer.CustomerName" />
+                    <div>
+                        <ValidationMessage For="@(()=>customer.CustomerName)" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <InputDate class="form-control" @bind-Value="@customer.DateOfBirth" />
+                    <div>
+                        <ValidationMessage For="@(()=>customer.DateOfBirth)"/>
+                    </div>
+                </div>
+                <div class="form-check">
+                    <label>Is Paid</label>
+                    <InputCheckbox @bind-Value="@customer.IsPaid" />
+                </div>
+                <div class="form-control-file my-2">
+                    @if (string.IsNullOrEmpty(customer.ImageUrl))
+                    {
+                        <img src="/favicon.png" height="60" width="80" />
+                    }
+                    else
+                    {
+                        <img src="@customer.ImageUrl" width="90" height="90" />
+                    }
+                    <InputFile OnChange="OnFileChange" accept="image/*" />
+                    <ValidationMessage For="@(()=>customer.ImageUrl)" />
+                </div>
+                <div class="btn btn-group">
+                    <button class="btn-success" type="submit">
+                        @if (customer.Id == 0)
+                        {
+                            <span>Create</span>
+                        }
+                        else
+                        {
+
+                            <span>Update</span>
+                        }
+                    </button>
+                    <button type="button" @onclick="Clear" class="btn btn-info">Clear</button>
+                </div>
+                <div>
+                    <a href="customers" class="btn btn-success">Back To List</a>
+                </div>
+
+            </div>
+            <div class="col-6">
+                <div>
+                    <button class="btn btn-secondary" type="button" @onclick="@(()=>customer.Products.Add(new Product()))">Add Product</button>
+                </div>
+                <table class="table table-bordered table-dark">
+                    <thead>
+                        <tr>
+                            <th>Sl.</th>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < customer.Products.Count; i++)
+                        {
+                            var index = i;
+                            var add = customer.Products[i];
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <InputText class="form-control" @bind-Value="@add.ProductName" />
+                                    <div>
+                                        <ValidationMessage For="@(()=>add.ProductName)" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <InputNumber class="form-control" @bind-Value="@add.ProductPrice" />
+                                    <div>
+                                        <ValidationMessage For="@(()=>add.ProductPrice)" />
+                                    </div>
+                                </td>
+                                <td>
+                                    <InputNumber class="form-control" @bind-Value="@add.ProductQty" />
+                                    <div>
+                                        <ValidationMessage For="@(()=>add.ProductQty)" />
+                                    </div>
+                                </td>
+                               
+                                <td>
+                                    <button @onclick="@(()=>customer.Products.RemoveAt(index))" type="button" class="btn btn-danger">X</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</EditForm>
+@code
+{
+    [Parameter]
+    public Customer customer { get; set; } = new();
+    [Parameter]
+    public EventCallback<EditContext> OnValidSubmit { get; set; } = new();
+
+    async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        var format = e.File.ContentType;
+        var resizedImage = await e.File.RequestImageFileAsync(format, 1060, 1060);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        customer.ImageUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+    }
+    private void Clear()
+    {
+        customer = new Customer();
+    }
+
+}
